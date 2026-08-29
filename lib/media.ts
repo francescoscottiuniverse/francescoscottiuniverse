@@ -27,7 +27,11 @@ function seeded(value: string) {
   return (hash >>> 0) / 4294967295;
 }
 
-export type BoardItem = {
+function round(value: number, places = 4) {
+  return Number(value.toFixed(places));
+}
+
+export type BoardImage = {
   key: string;
   image: ProjectImage;
   ratio: number;
@@ -35,21 +39,79 @@ export type BoardItem = {
   href?: string;
 };
 
-export type BoardRow = BoardItem[];
+export type BoardCell = {
+  key: string;
+  images: BoardImage[];
+  ratio: number;
+  weight: number;
+  drop: number;
+  gapBefore: number;
+};
+
+export type BoardRow = BoardCell[];
 
 const INDEX_TARGETS = [3.6, 5.2, 4.2, 6.0, 4.6, 3.2];
 const PROJECT_TARGETS = [2.4, 1.9, 2.8, 2.2];
 const MERGE_THRESHOLD = 0.7;
 
-function packRows(items: BoardItem[], targets: number[]): BoardRow[] {
+const MIN_SCALE = 0.78;
+const SCALE_RANGE = 0.37;
+const MAX_DROP = 2.2;
+const MAX_EXTRA_GAP = 2.4;
+const STACK_CHANCE = 0.16;
+const STACK_MIN_RATIO = 1.1;
+
+function ratioOf(image: ProjectImage) {
+  return round(image.width / image.height);
+}
+
+function stackRatio(images: BoardImage[]) {
+  const inverse = images.reduce((total, entry) => total + 1 / entry.ratio, 0);
+  return round(1 / inverse);
+}
+
+function toCells(images: BoardImage[], organic: boolean): BoardCell[] {
+  const cells: BoardCell[] = [];
+
+  for (let index = 0; index < images.length; index += 1) {
+    const entry = images[index];
+    const next = images[index + 1];
+
+    const canStack =
+      organic &&
+      next !== undefined &&
+      entry.ratio > STACK_MIN_RATIO &&
+      next.ratio > STACK_MIN_RATIO &&
+      seeded(`${entry.key}-stack`) < STACK_CHANCE;
+
+    const grouped = canStack ? [entry, next] : [entry];
+    if (canStack) index += 1;
+
+    const ratio = grouped.length > 1 ? stackRatio(grouped) : entry.ratio;
+    const scale = organic ? MIN_SCALE + seeded(`${entry.key}-scale`) * SCALE_RANGE : 1;
+
+    cells.push({
+      key: entry.key,
+      images: grouped,
+      ratio,
+      weight: round(ratio * scale),
+      drop: organic ? round(seeded(`${entry.key}-drop`) * MAX_DROP, 2) : 0,
+      gapBefore: organic ? round(seeded(`${entry.key}-gap`) * MAX_EXTRA_GAP, 2) : 0,
+    });
+  }
+
+  return cells;
+}
+
+function packRows(cells: BoardCell[], targets: number[]): BoardRow[] {
   const rows: BoardRow[] = [];
   let current: BoardRow = [];
   let sum = 0;
   let target = targets[0];
 
-  for (const item of items) {
-    current.push(item);
-    sum += item.ratio;
+  for (const cell of cells) {
+    current.push(cell);
+    sum += cell.weight;
     if (sum >= target) {
       rows.push(current);
       current = [];
@@ -69,12 +131,8 @@ function packRows(items: BoardItem[], targets: number[]): BoardRow[] {
   return rows;
 }
 
-function ratioOf(image: ProjectImage) {
-  return Number((image.width / image.height).toFixed(4));
-}
-
 export function buildMoodboard(): BoardRow[] {
-  const items: BoardItem[] = projects.map((project) => ({
+  const images: BoardImage[] = projects.map((project) => ({
     key: project.slug,
     image: project.images[0],
     ratio: ratioOf(project.images[0]),
@@ -82,18 +140,18 @@ export function buildMoodboard(): BoardRow[] {
     href: `/projects/${project.slug}`,
   }));
 
-  const ordered = [...items].sort((a, b) => seeded(`${a.key}-order`) - seeded(`${b.key}-order`));
-  return packRows(ordered, INDEX_TARGETS);
+  const ordered = [...images].sort((a, b) => seeded(`${a.key}-order`) - seeded(`${b.key}-order`));
+  return packRows(toCells(ordered, true), INDEX_TARGETS);
 }
 
 export function buildProjectRows(project: Project): BoardRow[] {
-  const items: BoardItem[] = project.images.map((image, index) => ({
+  const images: BoardImage[] = project.images.map((image, index) => ({
     key: `${project.slug}-${index}`,
     image,
     ratio: ratioOf(image),
   }));
 
-  return packRows(items, PROJECT_TARGETS);
+  return packRows(toCells(images, false), PROJECT_TARGETS);
 }
 
 export function getProject(slug: string) {
