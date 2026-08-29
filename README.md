@@ -1,36 +1,75 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Francesco Luigi Scotti
 
-## Getting Started
+Portfolio site for photographer Francesco Luigi Scotti. Next.js 16 (App Router), statically exported.
 
-First, run the development server:
+## Routes
+
+| Route | Contents |
+|---|---|
+| `/` | Full-bleed scrolling cover image |
+| `/universe` | Moodboard of all 35 projects, oxblood ground |
+| `/creative-direction` | Same moodboard, black ground |
+| `/projects/[slug]` | One project's full image set (35 pages, prerendered) |
+| `/story` | Biography and contact |
+
+## Local development
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Build
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm run build
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+`output: "export"` in `next.config.ts` writes a fully static site to `out/`. There is no server
+runtime: every route is prerendered at build time.
 
-## Learn More
+## Deploying to Cloudflare Pages
 
-To learn more about Next.js, take a look at the following resources:
+Because the site is a pure static export, it needs no Cloudflare adapter — not
+`@cloudflare/next-on-pages`, not `@opennextjs/cloudflare`. Point Pages at `out/`.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+**Git integration (recommended).** Connect the repository in the Cloudflare dashboard and set:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+| Setting | Value |
+|---|---|
+| Framework preset | None (or "Next.js (Static HTML Export)") |
+| Build command | `npm run build` |
+| Build output directory | `out` |
+| Node version | `20` or later (set `NODE_VERSION` if the default is older) |
 
-## Deploy on Vercel
+**Direct upload.**
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+npm run build
+npx wrangler pages deploy out
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Notes
+
+- `public/_headers` ships in the export and sets immutable caching for `/_next/static/*` and
+  `/cover/*`, plus baseline security headers.
+- Clean URLs (`/universe` → `universe.html`) and `404.html` are handled by Pages automatically.
+  Serving `out/` with a plain static file server that lacks HTML fallback will 404 on subroutes;
+  that is a limitation of the test server, not the build.
+
+## Media
+
+Project imagery is hotlinked from `static.wixstatic.com` (the Wix CDN backing
+francescoluigiscotti.com), sized per breakpoint via Wix transform URLs. The site therefore depends
+on that CDN staying available. Moving the images into this repo or onto R2 would remove that
+dependency.
+
+The cover image is local, in `public/cover/`, pre-generated at four widths and selected with
+`srcset`. Regenerate with:
+
+```bash
+for w in 640 960 1400; do
+  sips --resampleWidth $w --setProperty format jpeg --setProperty formatOptions 50 \
+    public/cover/cover-1959.jpg --out public/cover/cover-$w.jpg
+done
+```
