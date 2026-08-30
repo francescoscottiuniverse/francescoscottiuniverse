@@ -499,7 +499,7 @@ a:focus-visible {
 
 .c-moodboard {
   --col-gap: 1.1vw;
-  --row-gap: 2.5vh;
+  --row-gap: 1.4vh;
   display: flex;
   flex-direction: column;
   row-gap: var(--row-gap);
@@ -583,7 +583,7 @@ a:focus-visible {
 @media only screen and (max-width: 768px) {
   .c-moodboard {
     --col-gap: 1.6vw;
-    --row-gap: 1.75vh;
+    --row-gap: 1.1vh;
     flex-direction: row;
     flex-wrap: wrap;
     align-items: flex-start;
@@ -649,7 +649,7 @@ a:focus-visible {
 }
 
 .c-board-section {
-  padding-top: clamp(150px, 24vh, 300px);
+  padding-top: clamp(130px, 18vh, 230px);
 }
 
 .c-moodboard--project {

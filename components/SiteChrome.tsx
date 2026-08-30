@@ -1,18 +1,25 @@
 "use client";
 
 import Link from "next/link";
-import { useRef } from "react";
-import { site } from "@/lib/site";
+import { navLinks } from "@/lib/site";
 import { useSiteState } from "./SiteShell";
+
+export type ChromeProps = {
+  wordmark: string;
+  email: string;
+  currentPath: string;
+};
 
 export function LoadVeil() {
   return <div className="c-loadveil" aria-hidden="true" />;
 }
 
 export function Header({
+  wordmark,
   showLogo = true,
   scrim = false,
 }: {
+  wordmark: string;
   showLogo?: boolean;
   scrim?: boolean;
 }) {
@@ -24,7 +31,7 @@ export function Header({
       {showLogo ? (
         <p className="c-logo">
           <Link href="/" className="c-logo__inner" onClick={closeNav}>
-            {site.wordmark}
+            {wordmark}
           </Link>
         </p>
       ) : null}
@@ -41,16 +48,17 @@ export function Header({
   );
 }
 
-export function NavPanel({ currentPath }: { currentPath: string }) {
+export function NavPanel({ currentPath, email }: { currentPath: string; email: string }) {
   const { navPhase, closeNav } = useSiteState();
   const hidden = navPhase === "closed";
-  const panelRef = useRef<HTMLDivElement>(null);
+
+  const items = [...navLinks, { label: "Contact", href: `mailto:${email}` }];
 
   return (
-    <div className="c-navpanel" id="navpanel" ref={panelRef} inert={hidden}>
+    <div className="c-navpanel" id="navpanel" inert={hidden}>
       <nav aria-label="Main">
         <ul className="c-navmenu">
-          {site.nav.map((item) => {
+          {items.map((item) => {
             const external = item.href.startsWith("mailto:");
             const current = !external && item.href === currentPath;
 

@@ -7,12 +7,21 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "deploy": "next build && wrangler pages deploy out"
+    "deploy": "next build && wrangler pages deploy out",
+    "studio:dev": "sanity dev",
+    "studio:deploy": "sanity deploy"
   },
   "dependencies": {
+    "@sanity/image-url": "^2.1.1",
+    "@sanity/ui": "^4.0.7",
+    "@sanity/vision": "^6.11.0",
     "next": "16.3.3",
+    "next-sanity": "^13.3.3",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.8",
+    "sanity": "^6.11.0",
+    "sanity-plugin-media": "^6.1.7",
+    "styled-components": "^6.5.3"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

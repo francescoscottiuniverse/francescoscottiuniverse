@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRef } from "react";
 import { useMountEffect } from "@/hooks/useMountEffect";
-import { mediaSrc, mediaSrcSet, type BoardImage, type BoardRow } from "@/lib/media";
+import { type BoardImage, type BoardRow } from "@/lib/media";
 
 const SIZES = "(max-width: 768px) 48vw, 26vw";
 const PROJECT_SIZES = "(max-width: 768px) 96vw, 50vw";
@@ -29,12 +29,12 @@ function Picture({
   const media = (
     <>
       <img
-        src={mediaSrc(entry.image)}
-        srcSet={mediaSrcSet(entry.image)}
+        src={entry.src}
+        srcSet={entry.srcSet}
         sizes={sizes}
-        width={entry.image.width}
-        height={entry.image.height}
-        alt={entry.label ?? ""}
+        width={entry.width}
+        height={entry.height}
+        alt={entry.alt}
         loading={eager ? "eager" : "lazy"}
         decoding="async"
       />
