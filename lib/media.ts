@@ -24,6 +24,7 @@ export type BoardImage = {
   height: number;
   ratio: number;
   alt: string;
+  size: string;
   label?: string;
   href?: string;
 };
@@ -45,6 +46,14 @@ const MERGE_THRESHOLD = 0.7;
 
 const MIN_SCALE = 0.86;
 const SCALE_RANGE = 0.26;
+
+const SIZE_SCALES: Record<string, number> = {
+  small: 0.72,
+  medium: 1,
+  large: 1.3,
+  xlarge: 1.6,
+};
+
 const MAX_DROP = 1.1;
 const MAX_EXTRA_GAP = 1.1;
 const STACK_CHANCE = 0.16;
@@ -65,6 +74,7 @@ export function toBoardImage(
     height: image.height,
     ratio: round(image.width / image.height),
     alt: image.alt ?? extra?.label ?? "",
+    size: image.size ?? "auto",
     ...extra,
   };
 }
@@ -92,7 +102,8 @@ function toCells(images: BoardImage[], organic: boolean): BoardCell[] {
     if (canStack) index += 1;
 
     const ratio = grouped.length > 1 ? stackRatio(grouped) : entry.ratio;
-    const scale = organic ? MIN_SCALE + seeded(`${entry.key}-scale`) * SCALE_RANGE : 1;
+    const chosen = SIZE_SCALES[entry.size];
+    const scale = chosen ?? (organic ? MIN_SCALE + seeded(`${entry.key}-scale`) * SCALE_RANGE : 1);
 
     cells.push({
       key: entry.key,

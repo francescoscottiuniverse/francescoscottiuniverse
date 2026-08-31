@@ -16,6 +16,25 @@ const projectNameField = defineField({
     "Shown over the image on hover. Images on this board sharing the same text become one project, and clicking any of them opens it. Leave blank for a standalone image.",
 });
 
+const sizeField = defineField({
+  name: "size",
+  title: "Size",
+  type: "string",
+  initialValue: "auto",
+  description:
+    "How large this image sits on the board. Auto varies it slightly for a natural collage; the others force a size.",
+  options: {
+    list: [
+      { title: "Auto", value: "auto" },
+      { title: "Small", value: "small" },
+      { title: "Medium", value: "medium" },
+      { title: "Large", value: "large" },
+      { title: "Extra large", value: "xlarge" },
+    ],
+    layout: "radio",
+  },
+});
+
 const boardImages = (description: string) =>
   defineField({
     name: "images",
@@ -26,13 +45,13 @@ const boardImages = (description: string) =>
       defineArrayMember({
         type: "image",
         options: { hotspot: true },
-        fields: [altField, projectNameField],
+        fields: [altField, projectNameField, sizeField],
         preview: {
-          select: { media: "asset", title: "projectName", subtitle: "alt" },
+          select: { media: "asset", title: "projectName", subtitle: "size" },
           prepare: ({ media, title, subtitle }) => ({
             media,
             title: title || "Untitled",
-            subtitle,
+            subtitle: subtitle && subtitle !== "auto" ? `Size: ${subtitle}` : undefined,
           }),
         },
       }),

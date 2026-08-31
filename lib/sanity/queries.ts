@@ -7,6 +7,7 @@ export type SanityImage = {
   id: string;
   alt: string | null;
   projectName?: string | null;
+  size?: string | null;
   width: number;
   height: number;
 };
@@ -33,6 +34,7 @@ const IMAGE_FIELDS = groq`
   "id": asset._ref,
   "alt": alt,
   "projectName": projectName,
+  "size": size,
   "width": asset->metadata.dimensions.width,
   "height": asset->metadata.dimensions.height
 `;
