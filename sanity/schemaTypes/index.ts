@@ -13,7 +13,7 @@ const projectNameField = defineField({
   title: "Hover text / Project name",
   type: "string",
   description:
-    "Shown over the image on hover. Images on this board sharing the same text become one project, and clicking any of them opens it. Leave blank for a standalone image.",
+    "Shown over the image on hover. Images on this board sharing the same text become one project, and only the first of them appears on the board as its cover — the rest live on the project page. Leave blank and the image stands on its own.",
 });
 
 const sizeField = defineField({
@@ -22,7 +22,7 @@ const sizeField = defineField({
   type: "string",
   initialValue: "auto",
   description:
-    "How large this image sits on the board. Auto varies it slightly for a natural collage; the others force a size.",
+    "How large this image sits on the page. Auto varies it slightly for a natural collage; the others force a size.",
   options: {
     list: [
       { title: "Auto", value: "auto" },
@@ -47,11 +47,11 @@ const boardImages = (description: string) =>
         options: { hotspot: true },
         fields: [altField, projectNameField, sizeField],
         preview: {
-          select: { media: "asset", title: "projectName", subtitle: "size" },
-          prepare: ({ media, title, subtitle }) => ({
+          select: { media: "asset", title: "projectName", size: "size" },
+          prepare: ({ media, title, size }) => ({
             media,
             title: title || "Untitled",
-            subtitle: subtitle && subtitle !== "auto" ? `Size: ${subtitle}` : undefined,
+            subtitle: size && size !== "auto" ? `Size: ${size}` : undefined,
           }),
         },
       }),
@@ -61,7 +61,7 @@ const boardImages = (description: string) =>
   });
 
 const BOARD_HELP =
-  "Drag to reorder. Give images the same hover text to group them into a project.";
+  "One tile per project. Drag to reorder; the first image of each project is the tile shown here.";
 
 export const siteSettings = defineType({
   name: "siteSettings",

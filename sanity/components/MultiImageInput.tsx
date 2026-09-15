@@ -28,6 +28,7 @@ export function MultiImageInput(props: ArrayOfObjectsInputProps) {
       const image = {
         _type: "image",
         _key: uniqueKey(),
+        showOnBoard: true,
         asset: { _type: "reference", _ref: assetId },
       };
       if (itemType === "image") return image;

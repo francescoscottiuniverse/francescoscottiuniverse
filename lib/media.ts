@@ -147,16 +147,28 @@ function packRows(cells: BoardCell[], targets: number[]): BoardRow[] {
 }
 
 export function buildBoard(images: SanityImage[], basePath: string): BoardRow[] {
-  const board = images.map((image, index) => {
+  const claimed = new Set<string>();
+  const covers: BoardImage[] = [];
+
+  images.forEach((image, index) => {
     const name = projectNameOf(image);
-    return toBoardImage(
-      image,
-      `${image.id}-${index}`,
-      name ? { label: name, href: `${basePath}/${slugifyName(name)}` } : undefined,
+    const key = `${image.id}-${index}`;
+
+    if (!name) {
+      covers.push(toBoardImage(image, key));
+      return;
+    }
+
+    const groupKey = name.toLowerCase();
+    if (claimed.has(groupKey)) return;
+    claimed.add(groupKey);
+
+    covers.push(
+      toBoardImage(image, key, { label: name, href: `${basePath}/${slugifyName(name)}` }),
     );
   });
 
-  return packRows(toCells(board, true), INDEX_TARGETS);
+  return packRows(toCells(covers, true), INDEX_TARGETS);
 }
 
 export function buildProjectRows(project: {
