@@ -1,5 +1,5 @@
 import { imageUrl } from "./sanity/client";
-import { projectNameOf, slugifyName, type SanityImage } from "./sanity/queries";
+import { coverOf, isOpenable, type BoardProject, type SanityImage } from "./sanity/queries";
 
 const SRCSET_WIDTHS = [400, 640, 960, 1400, 1920];
 
@@ -146,36 +146,32 @@ function packRows(cells: BoardCell[], targets: number[]): BoardRow[] {
   return rows;
 }
 
-export function buildBoard(images: SanityImage[], basePath: string): BoardRow[] {
-  const claimed = new Set<string>();
-  const covers: BoardImage[] = [];
+export function buildBoard(projects: BoardProject[], basePath: string): BoardRow[] {
+  const tiles: BoardImage[] = [];
 
-  images.forEach((image, index) => {
-    const name = projectNameOf(image);
-    const key = `${image.id}-${index}`;
+  projects.forEach((project, index) => {
+    const cover = coverOf(project);
+    if (!cover) return;
 
-    if (!name) {
-      covers.push(toBoardImage(image, key));
-      return;
-    }
-
-    const groupKey = name.toLowerCase();
-    if (claimed.has(groupKey)) return;
-    claimed.add(groupKey);
-
-    covers.push(
-      toBoardImage(image, key, { label: name, href: `${basePath}/${slugifyName(name)}` }),
+    const key = `${cover.id}-${index}`;
+    tiles.push(
+      isOpenable(project)
+        ? toBoardImage(cover, key, {
+            label: project.title ?? undefined,
+            href: `${basePath}/${project.slug}`,
+          })
+        : toBoardImage(cover, key),
     );
   });
 
-  return packRows(toCells(covers, true), INDEX_TARGETS);
+  return packRows(toCells(tiles, true), INDEX_TARGETS);
 }
 
 export function buildProjectRows(project: {
   slug: string;
-  images: SanityImage[] | null;
+  images: SanityImage[];
 }): BoardRow[] {
-  const images = (project.images ?? []).map((image, index) =>
+  const images = project.images.map((image, index) =>
     toBoardImage(image, `${project.slug}-${index}`),
   );
 

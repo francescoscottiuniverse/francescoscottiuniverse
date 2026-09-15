@@ -6,6 +6,8 @@ import { Header, LoadVeil, NavPanel } from "@/components/SiteChrome";
 import { buildProjectRows, getNeighbours } from "@/lib/media";
 import type { BoardProject as BoardProjectType } from "@/lib/sanity/queries";
 
+type OpenableProject = BoardProjectType & { slug: string };
+
 export function BoardProject({
   project,
   projects,
@@ -15,8 +17,8 @@ export function BoardProject({
   email,
   theme = "default",
 }: {
-  project: BoardProjectType;
-  projects: BoardProjectType[];
+  project: OpenableProject;
+  projects: OpenableProject[];
   basePath: string;
   backLabel: string;
   wordmark: string;
@@ -36,7 +38,7 @@ export function BoardProject({
         <div className="c-board-shift">
           <main>
             <header className="c-projecthead">
-              <h1 className="c-projecthead__title">{project.name}</h1>
+              <h1 className="c-projecthead__title">{project.title}</h1>
               <p className="c-projecthead__meta">
                 {count} {count === 1 ? "Image" : "Images"}
               </p>
@@ -48,7 +50,7 @@ export function BoardProject({
               {previous && previous.slug !== project.slug ? (
                 <Link className="c-projectnav__link" href={`${basePath}/${previous.slug}`}>
                   <span className="c-projectnav__label">Previous</span>
-                  <span className="c-projectnav__title">{previous.name}</span>
+                  <span className="c-projectnav__title">{previous.title}</span>
                 </Link>
               ) : null}
               <Link className="c-projectnav__link c-projectnav__link--index" href={basePath}>
@@ -61,7 +63,7 @@ export function BoardProject({
                   href={`${basePath}/${next.slug}`}
                 >
                   <span className="c-projectnav__label">Next</span>
-                  <span className="c-projectnav__title">{next.name}</span>
+                  <span className="c-projectnav__title">{next.title}</span>
                 </Link>
               ) : null}
             </nav>

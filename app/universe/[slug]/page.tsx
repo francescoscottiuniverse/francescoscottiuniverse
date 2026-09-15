@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { BoardProject } from "@/components/BoardProject";
-import { getBoardProjects, getSiteSettings } from "@/lib/sanity/queries";
+import { getOpenableProjects, getSiteSettings } from "@/lib/sanity/queries";
 import { fallbackSettings } from "@/lib/site";
 
 export async function generateStaticParams() {
-  const projects = await getBoardProjects("universeBoard");
+  const projects = await getOpenableProjects("universe");
   if (projects.length === 0) return [{ slug: "none" }];
   return projects.map((project) => ({ slug: project.slug }));
 }
@@ -16,15 +16,15 @@ export async function generateMetadata({
   const { slug } = await params;
   const [settings, projects] = await Promise.all([
     getSiteSettings(),
-    getBoardProjects("universeBoard"),
+    getOpenableProjects("universe"),
   ]);
   const project = projects.find((entry) => entry.slug === slug);
   if (!project) return {};
 
   const resolved = settings ?? fallbackSettings;
   return {
-    title: `${project.name} — ${resolved.name}`,
-    description: `${project.name}, photographed by ${resolved.name}.`,
+    title: `${project.title} — ${resolved.name}`,
+    description: `${project.title}, photographed by ${resolved.name}.`,
   };
 }
 
@@ -32,7 +32,7 @@ export default async function UniverseProjectPage({ params }: PageProps<"/univer
   const { slug } = await params;
   const [settings, projects] = await Promise.all([
     getSiteSettings(),
-    getBoardProjects("universeBoard"),
+    getOpenableProjects("universe"),
   ]);
   const project = projects.find((entry) => entry.slug === slug);
   if (!project) notFound();

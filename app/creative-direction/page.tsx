@@ -4,7 +4,7 @@ import { SiteShell } from "@/components/SiteShell";
 import { SmoothScroll } from "@/components/SmoothScroll";
 import { Header, LoadVeil, NavPanel } from "@/components/SiteChrome";
 import { buildBoard } from "@/lib/media";
-import { getBoardImages, getSiteSettings } from "@/lib/sanity/queries";
+import { getProjects, getSiteSettings } from "@/lib/sanity/queries";
 import { fallbackSettings } from "@/lib/site";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -16,12 +16,12 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function CreativeDirectionPage() {
-  const [settings, images] = await Promise.all([
+  const [settings, projects] = await Promise.all([
     getSiteSettings(),
-    getBoardImages("creativeDirectionBoard"),
+    getProjects("creative-direction"),
   ]);
   const resolved = settings ?? fallbackSettings;
-  const rows = buildBoard(images, "/creative-direction");
+  const rows = buildBoard(projects, "/creative-direction");
 
   return (
     <SiteShell theme="dark">

@@ -4,7 +4,7 @@ import { SiteShell } from "@/components/SiteShell";
 import { SmoothScroll } from "@/components/SmoothScroll";
 import { Header, LoadVeil, NavPanel } from "@/components/SiteChrome";
 import { buildBoard } from "@/lib/media";
-import { getBoardImages, getSiteSettings } from "@/lib/sanity/queries";
+import { getProjects, getSiteSettings } from "@/lib/sanity/queries";
 import { fallbackSettings } from "@/lib/site";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -13,12 +13,12 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function UniversePage() {
-  const [settings, images] = await Promise.all([
+  const [settings, projects] = await Promise.all([
     getSiteSettings(),
-    getBoardImages("universeBoard"),
+    getProjects("universe"),
   ]);
   const resolved = settings ?? fallbackSettings;
-  const rows = buildBoard(images, "/universe");
+  const rows = buildBoard(projects, "/universe");
 
   return (
     <SiteShell>

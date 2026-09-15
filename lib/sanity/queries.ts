@@ -1,20 +1,20 @@
 import { groq } from "next-sanity";
 import { client } from "./client";
 
-export type BoardKey = "universeBoard" | "creativeDirectionBoard";
+export type BoardKey = "universe" | "creative-direction";
 
 export type SanityImage = {
   id: string;
   alt: string | null;
-  projectName?: string | null;
   size?: string | null;
   width: number;
   height: number;
 };
 
 export type BoardProject = {
-  name: string;
-  slug: string;
+  title: string | null;
+  slug: string | null;
+  cover: SanityImage | null;
   images: SanityImage[];
 };
 
@@ -33,7 +33,6 @@ export type SiteSettings = {
 const IMAGE_FIELDS = groq`
   "id": asset._ref,
   "alt": alt,
-  "projectName": projectName,
   "size": size,
   "width": asset->metadata.dimensions.width,
   "height": asset->metadata.dimensions.height
@@ -45,49 +44,41 @@ const SETTINGS_QUERY = groq`*[_type == "siteSettings"][0]{
   cover{ ${IMAGE_FIELDS} }
 }`;
 
-const BOARD_QUERY = groq`*[_type == $type][0]{ images[]{ ${IMAGE_FIELDS} } }`;
+const PROJECTS_QUERY = groq`*[_type == "project" && board == $board] | order(orderRank){
+  title,
+  "slug": slug.current,
+  cover{ ${IMAGE_FIELDS} },
+  images[]{ ${IMAGE_FIELDS} }
+}`;
+
+function hasSize(image: SanityImage | null | undefined): image is SanityImage {
+  return Boolean(image?.width && image?.height);
+}
 
 export function getSiteSettings() {
   return client.fetch<SiteSettings | null>(SETTINGS_QUERY);
 }
 
-export async function getBoardImages(type: BoardKey) {
-  const board = await client.fetch<{ images: SanityImage[] | null } | null>(BOARD_QUERY, { type });
-  return (board?.images ?? []).filter((image) => image?.width && image?.height);
+export async function getProjects(board: BoardKey): Promise<BoardProject[]> {
+  const projects = await client.fetch<BoardProject[] | null>(PROJECTS_QUERY, { board });
+
+  return (projects ?? [])
+    .map((project) => ({
+      ...project,
+      cover: hasSize(project.cover) ? project.cover : null,
+      images: (project.images ?? []).filter(hasSize),
+    }))
+    .filter((project) => project.cover || project.images.length > 0);
 }
 
-export function slugifyName(name: string) {
-  return name
-    .normalize("NFKD")
-    .replace(/[̀-ͯ]/g, "")
-    .replace(/[^a-zA-Z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .toLowerCase();
+export function coverOf(project: BoardProject) {
+  return project.cover ?? project.images[0] ?? null;
 }
 
-export function projectNameOf(image: SanityImage) {
-  return (image.projectName ?? "").trim().replace(/\s+/g, " ");
+export function isOpenable(project: BoardProject): project is BoardProject & { slug: string } {
+  return Boolean(project.title && project.slug);
 }
 
-export function groupIntoProjects(images: SanityImage[]): BoardProject[] {
-  const groups = new Map<string, BoardProject>();
-
-  for (const image of images) {
-    const name = projectNameOf(image);
-    if (!name) continue;
-
-    const key = name.toLowerCase();
-    const existing = groups.get(key);
-    if (existing) {
-      existing.images.push(image);
-    } else {
-      groups.set(key, { name, slug: slugifyName(name), images: [image] });
-    }
-  }
-
-  return [...groups.values()].filter((group) => group.slug.length > 0);
-}
-
-export async function getBoardProjects(type: BoardKey) {
-  return groupIntoProjects(await getBoardImages(type));
+export async function getOpenableProjects(board: BoardKey) {
+  return (await getProjects(board)).filter(isOpenable);
 }

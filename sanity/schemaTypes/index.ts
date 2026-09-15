@@ -1,19 +1,17 @@
 import { defineArrayMember, defineField, defineType } from "sanity";
+import { orderRankField } from "@sanity/orderable-document-list";
 import { MultiImageInput } from "../components/MultiImageInput";
+
+export const BOARDS = [
+  { title: "Universe", value: "universe" },
+  { title: "Creative Direction", value: "creative-direction" },
+];
 
 const altField = defineField({
   name: "alt",
   title: "Alt text",
   type: "string",
   description: "Describes the image for screen readers and search engines.",
-});
-
-const projectNameField = defineField({
-  name: "projectName",
-  title: "Hover text / Project name",
-  type: "string",
-  description:
-    "Shown over the image on hover. Images on this board sharing the same text become one project, and only the first of them appears on the board as its cover — the rest live on the project page. Leave blank and the image stands on its own.",
 });
 
 const sizeField = defineField({
@@ -35,33 +33,81 @@ const sizeField = defineField({
   },
 });
 
-const boardImages = (description: string) =>
-  defineField({
-    name: "images",
-    title: "Board images",
-    description,
-    type: "array",
-    of: [
-      defineArrayMember({
-        type: "image",
-        options: { hotspot: true },
-        fields: [altField, projectNameField, sizeField],
-        preview: {
-          select: { media: "asset", title: "projectName", size: "size" },
-          prepare: ({ media, title, size }) => ({
-            media,
-            title: title || "Untitled",
-            subtitle: size && size !== "auto" ? `Size: ${size}` : undefined,
-          }),
-        },
-      }),
-    ],
-    options: { layout: "grid" },
-    components: { input: MultiImageInput },
-  });
-
-const BOARD_HELP =
-  "One tile per project. Drag to reorder; the first image of each project is the tile shown here.";
+export const project = defineType({
+  name: "project",
+  title: "Project",
+  type: "document",
+  fields: [
+    defineField({
+      name: "board",
+      title: "Section",
+      type: "string",
+      description: "Which page this project belongs to.",
+      options: { list: BOARDS, layout: "radio" },
+      validation: (rule) => rule.required(),
+    }),
+    defineField({
+      name: "title",
+      title: "Title",
+      type: "string",
+      description:
+        "Shown over the cover on hover, and as the heading on the project page. Leave blank for a single image that sits on the board without a page of its own.",
+    }),
+    defineField({
+      name: "slug",
+      title: "Slug",
+      type: "slug",
+      description: "The project's web address, generated from the title.",
+      options: { source: "title", maxLength: 96 },
+      hidden: ({ document }) => !document?.title,
+    }),
+    defineField({
+      name: "cover",
+      title: "Cover",
+      type: "image",
+      options: { hotspot: true },
+      description:
+        "The one image that represents this project on the board. Leave empty to use the first image below.",
+    }),
+    defineField({
+      name: "images",
+      title: "Images",
+      description:
+        "Everything in this project, in the order it appears on the project page. Drag to reorder.",
+      type: "array",
+      of: [
+        defineArrayMember({
+          type: "image",
+          options: { hotspot: true },
+          fields: [altField, sizeField],
+          preview: {
+            select: { media: "asset", title: "alt", size: "size" },
+            prepare: ({ media, title, size }) => ({
+              media,
+              title: title || "Image",
+              subtitle: size && size !== "auto" ? `Size: ${size}` : undefined,
+            }),
+          },
+        }),
+      ],
+      options: { layout: "grid" },
+      components: { input: MultiImageInput },
+    }),
+    orderRankField({ type: "project" }),
+  ],
+  preview: {
+    select: { title: "title", board: "board", cover: "cover", first: "images.0", images: "images" },
+    prepare: ({ title, board, cover, first, images }) => {
+      const count = Array.isArray(images) ? images.length : 0;
+      const section = BOARDS.find((entry) => entry.value === board)?.title ?? "No section";
+      return {
+        title: title || "Untitled",
+        subtitle: `${section} · ${count} ${count === 1 ? "image" : "images"}`,
+        media: cover ?? first,
+      };
+    },
+  },
+});
 
 export const siteSettings = defineType({
   name: "siteSettings",
@@ -125,20 +171,4 @@ export const siteSettings = defineType({
   },
 });
 
-export const universeBoard = defineType({
-  name: "universeBoard",
-  title: "Universe",
-  type: "document",
-  fields: [boardImages(`The images on the Universe page. ${BOARD_HELP}`)],
-  preview: { prepare: () => ({ title: "Universe" }) },
-});
-
-export const creativeDirectionBoard = defineType({
-  name: "creativeDirectionBoard",
-  title: "Creative Direction",
-  type: "document",
-  fields: [boardImages(`The images on the Creative Direction page. ${BOARD_HELP}`)],
-  preview: { prepare: () => ({ title: "Creative Direction" }) },
-});
-
-export const schemaTypes = [siteSettings, universeBoard, creativeDirectionBoard];
+export const schemaTypes = [siteSettings, project];
