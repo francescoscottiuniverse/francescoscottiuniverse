@@ -4,7 +4,7 @@ import { visionTool } from "@sanity/vision";
 import { media } from "sanity-plugin-media";
 import { apiVersion, dataset, projectId } from "./sanity/env";
 import { schemaTypes } from "./sanity/schemaTypes";
-import { structure } from "./sanity/structure";
+import { structure } from "./sanity/deskStructure";
 
 const SINGLETONS = ["siteSettings", "universeBoard", "creativeDirectionBoard"];
 

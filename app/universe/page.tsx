@@ -15,7 +15,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function UniversePage() {
   const [settings, projects] = await Promise.all([
     getSiteSettings(),
-    getProjects("universe"),
+    getProjects("universeBoard"),
   ]);
   const resolved = settings ?? fallbackSettings;
   const rows = buildBoard(projects, "/universe");

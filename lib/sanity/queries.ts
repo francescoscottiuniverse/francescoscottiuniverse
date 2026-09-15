@@ -1,7 +1,7 @@
 import { groq } from "next-sanity";
 import { client } from "./client";
 
-export type BoardKey = "universe" | "creative-direction";
+export type BoardKey = "universeBoard" | "creativeDirectionBoard";
 
 export type SanityImage = {
   id: string;
@@ -44,7 +44,7 @@ const SETTINGS_QUERY = groq`*[_type == "siteSettings"][0]{
   cover{ ${IMAGE_FIELDS} }
 }`;
 
-const PROJECTS_QUERY = groq`*[_type == "project" && board == $board] | order(orderRank){
+const PROJECTS_QUERY = groq`*[_id == $board][0].projects[]->{
   title,
   "slug": slug.current,
   cover{ ${IMAGE_FIELDS} },

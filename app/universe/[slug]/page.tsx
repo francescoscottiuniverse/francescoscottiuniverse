@@ -5,7 +5,7 @@ import { getOpenableProjects, getSiteSettings } from "@/lib/sanity/queries";
 import { fallbackSettings } from "@/lib/site";
 
 export async function generateStaticParams() {
-  const projects = await getOpenableProjects("universe");
+  const projects = await getOpenableProjects("universeBoard");
   if (projects.length === 0) return [{ slug: "none" }];
   return projects.map((project) => ({ slug: project.slug }));
 }
@@ -16,7 +16,7 @@ export async function generateMetadata({
   const { slug } = await params;
   const [settings, projects] = await Promise.all([
     getSiteSettings(),
-    getOpenableProjects("universe"),
+    getOpenableProjects("universeBoard"),
   ]);
   const project = projects.find((entry) => entry.slug === slug);
   if (!project) return {};
@@ -32,7 +32,7 @@ export default async function UniverseProjectPage({ params }: PageProps<"/univer
   const { slug } = await params;
   const [settings, projects] = await Promise.all([
     getSiteSettings(),
-    getOpenableProjects("universe"),
+    getOpenableProjects("universeBoard"),
   ]);
   const project = projects.find((entry) => entry.slug === slug);
   if (!project) notFound();

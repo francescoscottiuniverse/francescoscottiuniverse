@@ -1,5 +1,4 @@
 import { defineArrayMember, defineField, defineType } from "sanity";
-import { orderRankField } from "@sanity/orderable-document-list";
 import { MultiImageInput } from "../components/MultiImageInput";
 
 export const BOARDS = [
@@ -38,14 +37,6 @@ export const project = defineType({
   title: "Project",
   type: "document",
   fields: [
-    defineField({
-      name: "board",
-      title: "Section",
-      type: "string",
-      description: "Which page this project belongs to.",
-      options: { list: BOARDS, layout: "radio" },
-      validation: (rule) => rule.required(),
-    }),
     defineField({
       name: "title",
       title: "Title",
@@ -93,19 +84,14 @@ export const project = defineType({
       options: { layout: "grid" },
       components: { input: MultiImageInput },
     }),
-    orderRankField({ type: "project" }),
   ],
   preview: {
-    select: { title: "title", board: "board", cover: "cover", first: "images.0", images: "images" },
-    prepare: ({ title, board, cover, first, images }) => {
-      const count = Array.isArray(images) ? images.length : 0;
-      const section = BOARDS.find((entry) => entry.value === board)?.title ?? "No section";
-      return {
-        title: title || "Untitled",
-        subtitle: `${section} · ${count} ${count === 1 ? "image" : "images"}`,
-        media: cover ?? first,
-      };
-    },
+    select: { title: "title", cover: "cover", first: "images.0" },
+    prepare: ({ title, cover, first }) => ({
+      title: title || "Untitled",
+      subtitle: title ? undefined : "Single image, no page",
+      media: cover ?? first,
+    }),
   },
 });
 
@@ -171,4 +157,26 @@ export const siteSettings = defineType({
   },
 });
 
-export const schemaTypes = [siteSettings, project];
+
+const boardProjects = (title: string) =>
+  defineType({
+    name: `${title === "Universe" ? "universe" : "creativeDirection"}Board`,
+    title,
+    type: "document",
+    fields: [
+      defineField({
+        name: "projects",
+        title: "Projects",
+        description:
+          "The projects on this page, in the order they appear. Drag to reorder. Use Add item to pick an existing project or create a new one.",
+        type: "array",
+        of: [defineArrayMember({ type: "reference", to: [{ type: "project" }] })],
+      }),
+    ],
+    preview: { prepare: () => ({ title }) },
+  });
+
+export const universeBoard = boardProjects("Universe");
+export const creativeDirectionBoard = boardProjects("Creative Direction");
+
+export const schemaTypes = [siteSettings, project, universeBoard, creativeDirectionBoard];

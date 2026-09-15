@@ -18,7 +18,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function CreativeDirectionPage() {
   const [settings, projects] = await Promise.all([
     getSiteSettings(),
-    getProjects("creative-direction"),
+    getProjects("creativeDirectionBoard"),
   ]);
   const resolved = settings ?? fallbackSettings;
   const rows = buildBoard(projects, "/creative-direction");
