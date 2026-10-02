@@ -1,5 +1,8 @@
 import { imageUrl } from "./sanity/client";
 import { coverOf, isOpenable, type BoardProject, type SanityImage } from "./sanity/queries";
+import { fallbackSettings } from "./site";
+
+const DEFAULT_ALT = `Fashion photograph by ${fallbackSettings.name}`;
 
 const SRCSET_WIDTHS = [400, 640, 960, 1400, 1920];
 
@@ -62,7 +65,7 @@ const STACK_MIN_RATIO = 1.1;
 export function toBoardImage(
   image: SanityImage,
   key: string,
-  extra?: { label?: string; href?: string },
+  extra?: { label?: string; href?: string; alt?: string },
 ): BoardImage {
   return {
     key,
@@ -73,9 +76,9 @@ export function toBoardImage(
     width: image.width,
     height: image.height,
     ratio: round(image.width / image.height),
-    alt: image.alt ?? extra?.label ?? "",
     size: image.size ?? "auto",
     ...extra,
+    alt: image.alt ?? extra?.alt ?? extra?.label ?? DEFAULT_ALT,
   };
 }
 
@@ -169,10 +172,13 @@ export function buildBoard(projects: BoardProject[], basePath: string): BoardRow
 
 export function buildProjectRows(project: {
   slug: string;
+  title?: string | null;
   images: SanityImage[];
 }): BoardRow[] {
   const images = project.images.map((image, index) =>
-    toBoardImage(image, `${project.slug}-${index}`),
+    toBoardImage(image, `${project.slug}-${index}`, {
+      alt: project.title ? `${project.title}, image ${index + 1} of ${project.images.length}` : undefined,
+    }),
   );
 
   return packRows(toCells(images, false), PROJECT_TARGETS);

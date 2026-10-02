@@ -38,7 +38,7 @@ function Picture({
         loading={eager ? "eager" : "lazy"}
         decoding="async"
       />
-      {entry.label ? <span className="c-moodboard__caption">{entry.label}</span> : null}
+      {entry.label ? <span className="c-moodboard__caption" aria-hidden="true">{entry.label}</span> : null}
     </>
   );
 

@@ -5,6 +5,9 @@ import { SmoothScroll } from "@/components/SmoothScroll";
 import { Header, LoadVeil, NavPanel } from "@/components/SiteChrome";
 import { buildProjectRows, getNeighbours } from "@/lib/media";
 import type { BoardProject as BoardProjectType } from "@/lib/sanity/queries";
+import { JsonLd } from "@/components/JsonLd";
+import { imageUrl } from "@/lib/sanity/client";
+import { SITE_URL, absoluteUrl, breadcrumbSchema, seoName } from "@/lib/seo";
 
 type OpenableProject = BoardProjectType & { slug: string };
 
@@ -13,6 +16,7 @@ export function BoardProject({
   projects,
   basePath,
   backLabel,
+  siteName,
   wordmark,
   email,
   theme = "default",
@@ -21,16 +25,46 @@ export function BoardProject({
   projects: OpenableProject[];
   basePath: string;
   backLabel: string;
+  siteName: string;
   wordmark: string;
   email: string;
   theme?: "default" | "dark";
 }) {
-  const rows = buildProjectRows({ slug: project.slug, images: project.images });
+  const name = seoName(project.title, project.slug);
+  const path = `${basePath}/${project.slug}`;
+  const rows = buildProjectRows({ slug: project.slug, title: name, images: project.images });
   const { previous, next } = getNeighbours(projects, project.slug);
   const count = project.images.length;
 
   return (
     <SiteShell theme={theme}>
+      <JsonLd
+        data={[
+          {
+            "@type": "ImageGallery",
+            "@id": `${absoluteUrl(path)}#gallery`,
+            url: absoluteUrl(path),
+            name,
+            isPartOf: { "@id": `${SITE_URL}/#website` },
+            author: { "@id": `${SITE_URL}/#person` },
+            image: project.images.map((image) => ({
+              "@type": "ImageObject",
+              contentUrl: imageUrl(image.id, 1600),
+              width: image.width,
+              height: image.height,
+              caption: image.alt ?? name,
+              creator: { "@type": "Person", name: siteName },
+              creditText: siteName,
+              copyrightNotice: `© ${siteName}`,
+            })),
+          },
+          breadcrumbSchema([
+            { name: "Home", path: "/" },
+            { name: backLabel, path: basePath },
+            { name, path },
+          ]),
+        ]}
+      />
       <LoadVeil />
       <Header wordmark={wordmark} />
       <NavPanel currentPath={basePath} email={email} />

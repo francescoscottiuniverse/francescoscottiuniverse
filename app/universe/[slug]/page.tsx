@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { BoardProject } from "@/components/BoardProject";
 import { getOpenableProjects, getSiteSettings } from "@/lib/sanity/queries";
 import { fallbackSettings } from "@/lib/site";
+import { describe, pageMetadata, seoName } from "@/lib/seo";
 
 export async function generateStaticParams() {
   const projects = await getOpenableProjects("universeBoard");
@@ -22,10 +23,18 @@ export async function generateMetadata({
   if (!project) return {};
 
   const resolved = settings ?? fallbackSettings;
-  return {
-    title: `${project.title} — ${resolved.name}`,
-    description: `${project.title}, photographed by ${resolved.name}.`,
-  };
+  const name = seoName(project.title, project.slug);
+  return pageMetadata({
+    siteName: resolved.name,
+    title: name,
+    description: describe.project(
+      name,
+      resolved.name,
+      "photography",
+      project.images.length,
+    ),
+    path: `/universe/${project.slug}`,
+  });
 }
 
 export default async function UniverseProjectPage({ params }: PageProps<"/universe/[slug]">) {
@@ -45,6 +54,7 @@ export default async function UniverseProjectPage({ params }: PageProps<"/univer
       projects={projects}
       basePath="/universe"
       backLabel="Universe"
+      siteName={resolved.name}
       wordmark={resolved.wordmark}
       email={resolved.email}
     />

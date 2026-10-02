@@ -4,25 +4,52 @@ import { SmoothScroll } from "@/components/SmoothScroll";
 import { Header, LoadVeil, NavPanel } from "@/components/SiteChrome";
 import { getSiteSettings } from "@/lib/sanity/queries";
 import { fallbackSettings } from "@/lib/site";
+import { JsonLd } from "@/components/JsonLd";
+import { SITE_URL, absoluteUrl, breadcrumbSchema, describe, pageMetadata, personSchema } from "@/lib/seo";
 
 export async function generateMetadata(): Promise<Metadata> {
   const settings = (await getSiteSettings()) ?? fallbackSettings;
-  return { title: `${settings.name} — Story`, description: settings.tagline ?? undefined };
+  return pageMetadata({
+    siteName: settings.name,
+    title: "Story",
+    description: describe.story(settings.name),
+    path: "/story",
+  });
 }
 
 export default async function StoryPage() {
   const settings = (await getSiteSettings()) ?? fallbackSettings;
   const lines = settings.about ?? [];
   const socials = settings.socials ?? [];
+  const sameAs = socials.flatMap((social) => (social.href ? [social.href] : []));
 
   return (
     <SiteShell>
+      <JsonLd
+        data={[
+          {
+            "@type": "ProfilePage",
+            "@id": `${absoluteUrl("/story")}#page`,
+            url: absoluteUrl("/story"),
+            name: `Story — ${settings.name}`,
+            description: describe.story(settings.name),
+            isPartOf: { "@id": `${SITE_URL}/#website` },
+            mainEntity: { "@id": `${SITE_URL}/#person` },
+          },
+          personSchema({ name: settings.name, email: settings.email, sameAs }),
+          breadcrumbSchema([
+            { name: "Home", path: "/" },
+            { name: "Story", path: "/story" },
+          ]),
+        ]}
+      />
       <LoadVeil />
       <Header wordmark={settings.wordmark} />
       <NavPanel currentPath="/story" email={settings.email} />
       <SmoothScroll>
         <div className="c-board-shift">
           <main className="c-page">
+            <h1 className="u-visually-hidden">The story of {settings.name}</h1>
             <div className="c-story c-lines">
               {lines.map((line) => (
                 <span className="line" key={line}>
@@ -40,7 +67,7 @@ export default async function StoryPage() {
                     href={social.href ?? "#"}
                     title={social.title ?? undefined}
                     target="_blank"
-                    rel="noopener"
+                    rel="noopener me"
                   >
                     {social.handle ?? social.title}
                   </a>

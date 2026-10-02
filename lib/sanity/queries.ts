@@ -12,6 +12,7 @@ export type SanityImage = {
 };
 
 export type BoardProject = {
+  updatedAt: string | null;
   title: string | null;
   slug: string | null;
   cover: SanityImage | null;
@@ -45,6 +46,7 @@ const SETTINGS_QUERY = groq`*[_type == "siteSettings"][0]{
 }`;
 
 const PROJECTS_QUERY = groq`*[_id == $board][0].projects[]->{
+  "updatedAt": _updatedAt,
   title,
   "slug": slug.current,
   cover{ ${IMAGE_FIELDS} },
