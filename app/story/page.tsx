@@ -5,7 +5,15 @@ import { Header, LoadVeil, NavPanel } from "@/components/SiteChrome";
 import { getSiteSettings } from "@/lib/sanity/queries";
 import { fallbackSettings } from "@/lib/site";
 import { JsonLd } from "@/components/JsonLd";
-import { SITE_URL, absoluteUrl, breadcrumbSchema, describe, pageMetadata, personSchema } from "@/lib/seo";
+import {
+  LICENSE_ANCHOR,
+  SITE_URL,
+  absoluteUrl,
+  breadcrumbSchema,
+  describe,
+  pageMetadata,
+  personSchema,
+} from "@/lib/seo";
 
 export async function generateMetadata(): Promise<Metadata> {
   const settings = (await getSiteSettings()) ?? fallbackSettings;
@@ -21,7 +29,9 @@ export default async function StoryPage() {
   const settings = (await getSiteSettings()) ?? fallbackSettings;
   const lines = settings.about ?? [];
   const socials = settings.socials ?? [];
-  const sameAs = socials.flatMap((social) => (social.href ? [social.href] : []));
+  const sameAs = socials.flatMap((social) =>
+    social.href ? [social.href] : [],
+  );
 
   return (
     <SiteShell>
@@ -74,6 +84,21 @@ export default async function StoryPage() {
                 </li>
               ))}
             </ul>
+            <section
+              id={LICENSE_ANCHOR}
+              className="c-story__licensing"
+              aria-labelledby="licensing-heading"
+            >
+              <h2 id="licensing-heading" className="c-story__label">
+                Licensing
+              </h2>
+              <p className="c-story__note">
+                All images © {settings.name}. They may not be reproduced,
+                published or used without written permission. For editorial or
+                commercial licensing, contact{" "}
+                <a href={`mailto:${settings.email}`}>{settings.email}</a>.
+              </p>
+            </section>
           </main>
         </div>
       </SmoothScroll>

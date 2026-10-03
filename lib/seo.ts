@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 
 export const SITE_URL = "https://francescoscottiuniverse.com";
 export const LOCATIONS = ["Dubai", "Milan", "Ibiza"];
+export const LICENSE_ANCHOR = "licensing";
+export const LICENSE_PATH = `/story#${LICENSE_ANCHOR}`;
 
 export const OG_IMAGE = {
   url: "/og.png",

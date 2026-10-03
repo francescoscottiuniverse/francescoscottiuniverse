@@ -7,7 +7,15 @@ import { buildProjectRows, getNeighbours } from "@/lib/media";
 import type { BoardProject as BoardProjectType } from "@/lib/sanity/queries";
 import { JsonLd } from "@/components/JsonLd";
 import { imageUrl } from "@/lib/sanity/client";
-import { SITE_URL, absoluteUrl, breadcrumbSchema, seoName } from "@/lib/seo";
+import {
+  LICENSE_PATH,
+  SITE_URL,
+  absoluteUrl,
+  breadcrumbSchema,
+  seoName,
+} from "@/lib/seo";
+
+const SCHEMA_IMAGE_WIDTH = 1600;
 
 type OpenableProject = BoardProjectType & { slug: string };
 
@@ -32,7 +40,11 @@ export function BoardProject({
 }) {
   const name = seoName(project.title, project.slug);
   const path = `${basePath}/${project.slug}`;
-  const rows = buildProjectRows({ slug: project.slug, title: name, images: project.images });
+  const rows = buildProjectRows({
+    slug: project.slug,
+    title: name,
+    images: project.images,
+  });
   const { previous, next } = getNeighbours(projects, project.slug);
   const count = project.images.length;
 
@@ -47,16 +59,21 @@ export function BoardProject({
             name,
             isPartOf: { "@id": `${SITE_URL}/#website` },
             author: { "@id": `${SITE_URL}/#person` },
-            image: project.images.map((image) => ({
-              "@type": "ImageObject",
-              contentUrl: imageUrl(image.id, 1600),
-              width: image.width,
-              height: image.height,
-              caption: image.alt ?? name,
-              creator: { "@type": "Person", name: siteName },
-              creditText: siteName,
-              copyrightNotice: `© ${siteName}`,
-            })),
+            image: project.images.map((image) => {
+              const width = Math.min(SCHEMA_IMAGE_WIDTH, image.width);
+              return {
+                "@type": "ImageObject",
+                contentUrl: imageUrl(image.id, width),
+                width,
+                height: Math.round((width * image.height) / image.width),
+                caption: image.alt ?? name,
+                creator: { "@type": "Person", name: siteName },
+                creditText: siteName,
+                copyrightNotice: `© ${siteName}`,
+                license: absoluteUrl(LICENSE_PATH),
+                acquireLicensePage: absoluteUrl(LICENSE_PATH),
+              };
+            }),
           },
           breadcrumbSchema([
             { name: "Home", path: "/" },
@@ -82,12 +99,18 @@ export function BoardProject({
 
             <nav className="c-projectnav" aria-label="More projects">
               {previous && previous.slug !== project.slug ? (
-                <Link className="c-projectnav__link" href={`${basePath}/${previous.slug}`}>
+                <Link
+                  className="c-projectnav__link"
+                  href={`${basePath}/${previous.slug}`}
+                >
                   <span className="c-projectnav__label">Previous</span>
                   <span className="c-projectnav__title">{previous.title}</span>
                 </Link>
               ) : null}
-              <Link className="c-projectnav__link c-projectnav__link--index" href={basePath}>
+              <Link
+                className="c-projectnav__link c-projectnav__link--index"
+                href={basePath}
+              >
                 <span className="c-projectnav__label">Back to</span>
                 <span className="c-projectnav__title">{backLabel}</span>
               </Link>
