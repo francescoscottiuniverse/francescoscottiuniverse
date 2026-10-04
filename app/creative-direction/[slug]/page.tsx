@@ -26,7 +26,7 @@ export async function generateMetadata({
   const name = seoName(project.title, project.slug);
   return pageMetadata({
     siteName: resolved.name,
-    title: name,
+    title: `${name} — Creative Direction`,
     description: describe.project(
       name,
       resolved.name,

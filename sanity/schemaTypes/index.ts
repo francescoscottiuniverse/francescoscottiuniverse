@@ -42,7 +42,7 @@ export const project = defineType({
       title: "Title",
       type: "string",
       description:
-        "Shown over the cover on hover, and as the heading on the project page. Leave blank for a single image that sits on the board without a page of its own.",
+        "Shown over the cover on hover, and as the heading on the project page. Leave it empty for an image with no caption that isn't clickable.",
     }),
     defineField({
       name: "slug",
@@ -87,11 +87,14 @@ export const project = defineType({
   ],
   preview: {
     select: { title: "title", cover: "cover", first: "images.0" },
-    prepare: ({ title, cover, first }) => ({
-      title: title || "Untitled",
-      subtitle: title ? undefined : "Single image, no page",
-      media: cover ?? first,
-    }),
+    prepare: ({ title, cover, first }) => {
+      const named = /[\p{L}\p{N}]/u.test(title ?? "");
+      return {
+        title: named ? title : "Untitled",
+        subtitle: named ? undefined : "No caption · not clickable",
+        media: cover ?? first,
+      };
+    },
   },
 });
 

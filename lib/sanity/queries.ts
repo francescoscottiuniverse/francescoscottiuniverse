@@ -53,6 +53,27 @@ const PROJECTS_QUERY = groq`*[_id == $board][0].projects[]->{
   images[]{ ${IMAGE_FIELDS} }
 }`;
 
+export function meaningfulTitle(title: string | null | undefined) {
+  const clean = (title ?? "").trim().replace(/\s+/g, " ");
+  return /[\p{L}\p{N}]/u.test(clean) ? clean : null;
+}
+
+function slugify(text: string) {
+  return text
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .toLowerCase();
+}
+
+function uniqueSlug(base: string, taken: Set<string>) {
+  let slug = base;
+  for (let copy = 2; taken.has(slug); copy += 1) slug = `${base}-${copy}`;
+  taken.add(slug);
+  return slug;
+}
+
 function hasSize(image: SanityImage | null | undefined): image is SanityImage {
   return Boolean(image?.width && image?.height);
 }
@@ -63,8 +84,14 @@ export function getSiteSettings() {
 
 export async function getProjects(board: BoardKey): Promise<BoardProject[]> {
   const projects = await client.fetch<BoardProject[] | null>(PROJECTS_QUERY, { board });
+  const taken = new Set<string>();
 
   return (projects ?? [])
+    .map((project) => {
+      const title = meaningfulTitle(project.title);
+      const base = title ? project.slug || slugify(title) : null;
+      return { ...project, title, slug: base ? uniqueSlug(base, taken) : null };
+    })
     .map((project) => ({
       ...project,
       cover: hasSize(project.cover) ? project.cover : null,
