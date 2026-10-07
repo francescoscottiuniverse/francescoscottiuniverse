@@ -7,6 +7,7 @@ import { type BoardImage, type BoardRow } from "@/lib/media";
 
 const SIZES = "(max-width: 768px) 48vw, 26vw";
 const PROJECT_SIZES = "(max-width: 768px) 96vw, 50vw";
+const LANDSCAPE_SIZES = "(max-width: 768px) 100vw, 26vw";
 
 function shuffled(length: number) {
   const values = Array.from({ length }, (_, index) => index + 1);
@@ -101,10 +102,12 @@ export function Moodboard({
             const eager = rowIndex < 2;
             const revealIndex = ordinal;
             ordinal += 1;
+            const landscape = cell.images.every((entry) => entry.ratio > 1);
+            const cellSizes = landscape && variant === "index" ? LANDSCAPE_SIZES : sizes;
 
             return (
               <div
-                className={`c-moodboard__cell${intro ? "" : " is--reveal"}`}
+                className={`c-moodboard__cell${intro ? "" : " is--reveal"}${landscape ? " is--landscape" : ""}`}
                 key={cell.key}
                 style={
                   {
@@ -117,7 +120,7 @@ export function Moodboard({
               >
                 {cell.images.map((entry) => (
                   <figure className="c-moodboard__item" key={entry.key}>
-                    <Picture entry={entry} sizes={sizes} eager={eager} />
+                    <Picture entry={entry} sizes={cellSizes} eager={eager} />
                   </figure>
                 ))}
               </div>
